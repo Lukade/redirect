@@ -22,7 +22,10 @@ func main() {
 
 	// init defaults
 	stats := redirect.InMemoryStats()
+
 	storage := &redirect.JSONStorage{FileName: *configFile}
+	storage.Reload();
+
 	engine := redirect.DefaultEngine(storage, stats)
 	ui := redirect.DefaultUI(storage, stats, engine, port)
 
