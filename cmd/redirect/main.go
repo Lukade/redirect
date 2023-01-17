@@ -24,9 +24,11 @@ func main() {
 	stats := redirect.InMemoryStats()
 
 	storage := &redirect.JSONStorage{FileName: *configFile}
-	storage.Reload();
+	storage.Reload()
 
 	engine := redirect.DefaultEngine(storage, stats)
+	engine.Reload()
+
 	ui := redirect.DefaultUI(storage, stats, engine, port)
 
 	go func() {
@@ -41,7 +43,7 @@ func main() {
 	http.Handle("/api/", http.StripPrefix("/api/", ui))
 	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		// redirect to ui
-		http.Redirect(writer, request, "ui/", http.StatusTemporaryRedirect)
+		http.Redirect(writer, request, "ui/", http.StatusPermanentRedirect)
 	})
 	log.Println("UI:", *uiAddr)
 	log.Println("Bind:", *bind)
