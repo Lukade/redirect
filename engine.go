@@ -64,7 +64,7 @@ func (eng *engine) ServeHTTP(wr http.ResponseWriter, rq *http.Request) {
 		return
 	}
 	wr.Header().Add("Content-Length", "0")
-	http.Redirect(wr, rq, url, http.StatusFound)
+	http.Redirect(wr, rq, url, http.StatusMovedPermanently)
 }
 
 func (eng *engine) Reload() error {
