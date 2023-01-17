@@ -63,6 +63,10 @@ Address for UI (default "127.0.0.1:10101")
 * `/ui/` - UI interface
 * `/api/`  - API handlers
 
+### -defaultUrl 
+
+Add an url to which all non mapped requests get redirected
+
 # Actions on redirect server
 
 * `GET/POST/PUT/DELETE` - returns redirection with 302 Found status

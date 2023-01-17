@@ -15,6 +15,8 @@ func main() {
 	uiAddr := flag.String("ui-addr", "127.0.0.1:10101", "Address for UI")
 	configFile := flag.String("config", "./redir.json", "File to save configs")
 	bind := flag.String("bind", "0.0.0.0:10100", "Redirect address")
+	defaultUrl := flag.String("defaultUrl", "", "Default redirect URL")
+
 	flag.Parse()
 
 	// get redirect port for UI
@@ -26,7 +28,7 @@ func main() {
 	storage := &redirect.JSONStorage{FileName: *configFile}
 	storage.Reload()
 
-	engine := redirect.DefaultEngine(storage, stats)
+	engine := redirect.DefaultEngine(storage, stats, *defaultUrl)
 	engine.Reload()
 
 	ui := redirect.DefaultUI(storage, stats, engine, port)

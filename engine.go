@@ -11,14 +11,15 @@ import (
 )
 
 type engine struct {
-	storage Storage
-	stat    StatWriter
-	lock    sync.RWMutex
-	rules   map[string]*template.Template
+	storage    Storage
+	stat       StatWriter
+	lock       sync.RWMutex
+	rules      map[string]*template.Template
+	defaultUrl string
 }
 
 // Create default engine based on provided storage and sink.
-func DefaultEngine(storage Storage, sink StatWriter) Engine {
+func DefaultEngine(storage Storage, sink StatWriter, defaultUrl string) Engine {
 	if storage == nil {
 		panic("storage is nil")
 	}
@@ -26,8 +27,9 @@ func DefaultEngine(storage Storage, sink StatWriter) Engine {
 		panic("stats sink is nil")
 	}
 	return &engine{
-		storage: storage,
-		stat:    sink,
+		storage:    storage,
+		stat:       sink,
+		defaultUrl: defaultUrl,
 	}
 }
 
@@ -40,21 +42,30 @@ func (eng *engine) ServeHTTP(wr http.ResponseWriter, rq *http.Request) {
 	eng.lock.RLock()
 	tpl, ok := eng.rules[service]
 	eng.lock.RUnlock()
+
 	if !ok {
-		http.NotFound(wr, rq)
+		if eng.defaultUrl != "" {
+			Redirect(eng.defaultUrl, wr, rq)
+		} else {
+			http.NotFound(wr, rq)
+		}
+
 		return
 	}
+
 	// notify stat counter
 	eng.stat.Touch(service)
 
 	// render redirect template
 	urlData := &bytes.Buffer{}
 	err := tpl.Execute(urlData, rq)
+
 	if err != nil {
 		log.Println("engine: failed execute template for service", service, ":", err)
 		http.Error(wr, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	url := strings.TrimSpace(urlData.String())
 
 	// We send TARGET in Location header on HEAD request with 200 OK status
@@ -63,8 +74,8 @@ func (eng *engine) ServeHTTP(wr http.ResponseWriter, rq *http.Request) {
 		wr.WriteHeader(http.StatusOK)
 		return
 	}
-	wr.Header().Add("Content-Length", "0")
-	http.Redirect(wr, rq, url, http.StatusMovedPermanently)
+
+	Redirect(url, wr, rq)
 }
 
 func (eng *engine) Reload() error {
@@ -84,4 +95,9 @@ func (eng *engine) Reload() error {
 	eng.rules = swap
 	eng.lock.Unlock()
 	return nil
+}
+
+func Redirect(url string, wr http.ResponseWriter, rq *http.Request) {
+	wr.Header().Add("Content-Length", "0")
+	http.Redirect(wr, rq, url, http.StatusMovedPermanently)
 }
