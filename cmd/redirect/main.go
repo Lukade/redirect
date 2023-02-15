@@ -16,6 +16,8 @@ func main() {
 	configFile := flag.String("config", "./redir.json", "File to save configs")
 	bind := flag.String("bind", "0.0.0.0:10100", "Redirect address")
 	defaultUrl := flag.String("defaultUrl", "", "Default redirect URL")
+	urlParameter := flag.String("urlParameter", "", "This parameter will be added urls for regular users")
+	robots := flag.String("robots", "", "Robots user agents")
 
 	flag.Parse()
 
@@ -28,7 +30,7 @@ func main() {
 	storage := &redirect.JSONStorage{FileName: *configFile}
 	storage.Reload()
 
-	engine := redirect.DefaultEngine(storage, stats, *defaultUrl)
+	engine := redirect.DefaultEngine(storage, stats, *defaultUrl, *urlParameter, *robots)
 	engine.Reload()
 
 	ui := redirect.DefaultUI(storage, stats, engine, port)
